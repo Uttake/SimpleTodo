@@ -6,9 +6,9 @@ const HistoryTask = ({ id, todo, completed }: task) => {
   return (
     <div
       key={id}
-      className="flex mt-4 items-center text-white w-full justify-between max-w-44"
+      className="flex mt-4 items-center text-white w-full justify-between max-w-44 "
     >
-      <div className="relative">
+      <div className="relative ">
         <Checkbox
           checked={completed}
           className={` checked:text-white data-[state=checked]:bg-black rounded-[50%] data-[state=checked]:border-black border-[1px] border-slate-400 w-4 h-4`}
@@ -19,7 +19,12 @@ const HistoryTask = ({ id, todo, completed }: task) => {
           </span>
         )}
       </div>
-      <h2 className={clsx({ "line-through opacity-30": completed }, "text-sm")}>
+      <h2
+        className={clsx(
+          { "line-through opacity-30": completed },
+          "text-sm text-black dark:text-white"
+        )}
+      >
         {todo}
       </h2>
     </div>

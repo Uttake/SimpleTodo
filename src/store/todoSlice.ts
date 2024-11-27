@@ -1,27 +1,24 @@
-import { task, todo, TodoState } from "@/lib/definitions";
+import {task, todo, TodoState } from "@/lib/definitions";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v1 } from "uuid";
+import { addNewTodo, fetchTodos } from "@/services/todoServices";
 
 const initialState: TodoState = {
   todos: [],
-  history: []
+  history: [],
+  loading: false,
+  error: null
 };
+
 
 const todosSlice = createSlice({
     name: 'todos',
     initialState,
     reducers: (create) => ({
-        addTodo: create.reducer((state, action : PayloadAction<{title: string}>) => {
-            let todo : todo = {
-                id: v1(),
-                title: action.payload.title,
-                tasks: []
-            }
-            state.todos.push(todo)
-        }),
         deleteTodo: create.reducer((state, action: PayloadAction<{id: string}>) => {
             let todo = state.todos.find(el => el.id === action.payload.id);
             if(todo) {
+                localStorage.setItem('history', JSON.stringify(state.history));
                 state.history.push(todo);
                 if(state.history.length > 15) {
                     state.history.shift();
@@ -68,8 +65,14 @@ const todosSlice = createSlice({
           }
         }),
         updateTodos: create.reducer((state:any, action : PayloadAction<{todos: todo[]}>) => {
-          console.log('Updated todos in Redux:', action.payload.todos);
+        
           state.todos = [...action.payload.todos]
+        }),
+        editTodo: create.reducer((state, action: PayloadAction<{id : string, newTitle: string}>) => {
+          const todo = state.todos.find(el => el.id === action.payload.id)
+          if(todo) {
+            todo.title = action.payload.newTitle
+          }
         }),
         restoreHistory: create.reducer((state, action : PayloadAction<{id: string}>) => {
           const todo = state.history.find((el) => el.id === action.payload.id);
@@ -80,6 +83,19 @@ const todosSlice = createSlice({
         }),
         removeHistory: create.reducer((state, action : PayloadAction<{id: string}>) => {
           state.history = state.history.filter((el) => el.id !== action.payload.id);
+        }),
+        clearHistory: create.reducer((state) => {
+          localStorage.setItem('history', JSON.stringify([]));
+          state.history = []
+        }),
+        editTask: create.reducer((state, action: PayloadAction<{id: string; taskId: string; todo: string}>) => {
+          const todo = state.todos.find((el) => el.id === action.payload.id);
+          if (todo) {
+            const task = todo.tasks.find((el) => el.id === action.payload.taskId);
+            if (task) {
+              task.todo = action.payload.todo;
+            }
+          }
         })
        
     }),
@@ -87,11 +103,52 @@ const todosSlice = createSlice({
         getTodos: (state) => state.todos,
         getTasks: (state: any, id: string) => state.todos.find((el: any) => el.id === id)?.tasks,
         getHistoryTodo: (state) => state.history
+    },
+    extraReducers: (builder) => {
+      builder
+      .addCase(addNewTodo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addNewTodo.fulfilled, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.todos = [...state.todos, action.payload];
+      })
+      .addCase(addNewTodo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Ошибка регистрации';
+      })
+      .addCase(fetchTodos.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTodos.fulfilled, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.todos = action.payload;
+      })
+      .addCase(fetchTodos.rejected, (state, action) => {
+        state.loading = false;
+        state.error = typeof action.payload === 'string' ? action.payload : 'Ошибка получения данных';
+      })
     }
             
 })
 
-export const {addTodo, deleteTodo, addTask, deleteTask, toggleTask, clearCompleted, updatedTask, updateTodos, restoreHistory, removeHistory} = todosSlice.actions
+export const {
+
+  deleteTodo,
+  addTask,
+  deleteTask,
+  toggleTask,
+  clearCompleted,
+  updatedTask,
+  updateTodos,
+  restoreHistory,
+  removeHistory,
+  clearHistory,
+  editTask,
+  editTodo
+} = todosSlice.actions
 export const {getTodos, getTasks, getHistoryTodo} = todosSlice.selectors
 
 export default todosSlice.reducer

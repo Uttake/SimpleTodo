@@ -28,7 +28,15 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --darkBg: #272A36;
+    --lightBg: #f5edf0;
   }
+
+  .light {
+    --background: f5edf0;
+  }
+
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -54,14 +62,16 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
   }
 }
 
-body {
+body[data-theme="dark"] {
   background-color: black;
+  transition: all 0.3s ease-in-out;
 }
 
-body::after {
+body[data-theme="dark"]::after {
   content: "";
   position: fixed;
   top: 0;
@@ -69,8 +79,27 @@ body::after {
   right: 0;
   height: 100vh;
   clip-path: polygon(100% 0, 0% 100%, 100% 100%);
-  background-color: rgb(109 40 217 / var(--tw-bg-opacity, 1));
+  background-color: #dcbddf;
 }
+
+
+body[data-theme="light"] {
+  background-color: #dcbddf;
+  transition: all 0.3s ease-in-out;
+}
+
+body[data-theme="light"]::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  clip-path: polygon(100% 0, 0% 100%, 100% 100%);
+  background-color: white;
+  transition: all 0.3s ease-in-out;
+}
+
 
 @layer base {
   * {
@@ -100,7 +129,7 @@ body::after {
 .history-enter-active {
   opacity: 1;
   max-height: 144px;
-  transition: opacity 300ms ease-in-out, max-height 300ms ease-in-out;
+  transition: opacity 400ms ease-in-out, max-height 400ms ease-in-out;
 }
 
 .history-exit {
@@ -111,7 +140,7 @@ body::after {
 .history-exit-active {
   opacity: 0;
   max-height: 0;
-  transition: opacity 300ms ease-in-out, max-height 300ms ease-in-out;
+  transition: opacity 400ms ease-in-out, max-height 400ms ease-in-out;
 }
 
 .task-enter {

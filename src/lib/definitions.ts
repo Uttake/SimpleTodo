@@ -1,3 +1,5 @@
+
+
 export type todo = {
     id: string,
     title: string,
@@ -8,13 +10,14 @@ export type task = {
     id: string,
     todo: string,
     completed: boolean
+    position?:number
 }
 
-export type RootState = {
-    todos: todo[]
-}
+
 
 export type TodoState = {
     todos: todo[]; 
     history: todo[]; 
+    loading: boolean;
+    error: string | null
   };
