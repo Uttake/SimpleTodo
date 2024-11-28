@@ -1,7 +1,7 @@
 import {task, todo, TodoState } from "@/lib/definitions";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v1 } from "uuid";
-import { addNewTodo, fetchTodos } from "@/services/todoServices";
+import { addNewTodo, asyncTodoState, deleteCompletedTasks, fetchTodos, restoreHistoryTodo } from "@/services/todoServices";
 
 const initialState: TodoState = {
   todos: [],
@@ -18,11 +18,11 @@ const todosSlice = createSlice({
         deleteTodo: create.reducer((state, action: PayloadAction<{id: string}>) => {
             let todo = state.todos.find(el => el.id === action.payload.id);
             if(todo) {
-                localStorage.setItem('history', JSON.stringify(state.history));
                 state.history.push(todo);
                 if(state.history.length > 15) {
                     state.history.shift();
                 }
+                localStorage.setItem('history', JSON.stringify(state.history));
                 state.todos = state.todos.filter(el => el.id !== action.payload.id);
             }
         }),
@@ -52,19 +52,14 @@ const todosSlice = createSlice({
               }
             }
         }),
-        clearCompleted: create.reducer((state, action : PayloadAction<{id: string}>) => {
-            const todo = state.todos.find((el) => el.id === action.payload.id);
-            if(todo) {
-                todo.tasks = todo.tasks.filter((el: task) => !el.completed)
-            }
-        }),
+    
         updatedTask: create.reducer((state, action : PayloadAction<{id: string, tasks: task[]}>) => {
           const todo = state.todos.find((el) => el.id === action.payload.id)
           if(todo) {
             todo.tasks = [...action.payload.tasks];
           }
         }),
-        updateTodos: create.reducer((state:any, action : PayloadAction<{todos: todo[]}>) => {
+        updateTodos: create.reducer((state, action : PayloadAction<{todos: todo[]}>) => {
         
           state.todos = [...action.payload.todos]
         }),
@@ -74,14 +69,14 @@ const todosSlice = createSlice({
             todo.title = action.payload.newTitle
           }
         }),
-        restoreHistory: create.reducer((state, action : PayloadAction<{id: string}>) => {
-          const todo = state.history.find((el) => el.id === action.payload.id);
-          if(todo) {
-            state.todos.push(todo);
-            state.history = state.history.filter((el) => el.id !== action.payload.id);
+        getHistory: create.reducer((state) => {
+          const history = localStorage.getItem('history');
+          if (history) {
+            state.history = JSON.parse(history);
           }
         }),
         removeHistory: create.reducer((state, action : PayloadAction<{id: string}>) => {
+          localStorage.setItem('history', JSON.stringify(state.history.filter((el) => el.id !== action.payload.id)));
           state.history = state.history.filter((el) => el.id !== action.payload.id);
         }),
         clearHistory: create.reducer((state) => {
@@ -101,7 +96,7 @@ const todosSlice = createSlice({
     }),
     selectors: {
         getTodos: (state) => state.todos,
-        getTasks: (state: any, id: string) => state.todos.find((el: any) => el.id === id)?.tasks,
+        getTasks: (state: any, id: string) => state.todos.find((el: task) => el.id === id)?.tasks,
         getHistoryTodo: (state) => state.history
     },
     extraReducers: (builder) => {
@@ -110,7 +105,7 @@ const todosSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addNewTodo.fulfilled, (state, action: PayloadAction<any>) => {
+      .addCase(addNewTodo.fulfilled, (state, action: PayloadAction<asyncTodoState>) => {
         state.loading = false;
         state.todos = [...state.todos, action.payload];
       })
@@ -122,7 +117,7 @@ const todosSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchTodos.fulfilled, (state, action: PayloadAction<any>) => {
+      .addCase(fetchTodos.fulfilled, (state, action: PayloadAction<asyncTodoState[]>) => {
         state.loading = false;
         state.todos = action.payload;
       })
@@ -130,24 +125,33 @@ const todosSlice = createSlice({
         state.loading = false;
         state.error = typeof action.payload === 'string' ? action.payload : 'Ошибка получения данных';
       })
+      .addCase(restoreHistoryTodo.fulfilled, (state, action: PayloadAction<asyncTodoState>) => {
+        state.todos = [...state.todos, action.payload];
+        state.history = state.history.filter((el) => el.id !== action.payload.id);
+        localStorage.setItem('history', JSON.stringify(state.history));
+      })
+      .addCase(deleteCompletedTasks.fulfilled, (state, action: PayloadAction<{id: string}>) => {
+        const todo = state.todos.find((el) => el.id === action.payload.id);
+        if (todo) {
+          todo.tasks = todo.tasks.filter((el) => !el.completed);
+        }
+      })
     }
             
 })
 
 export const {
-
   deleteTodo,
   addTask,
   deleteTask,
   toggleTask,
-  clearCompleted,
   updatedTask,
   updateTodos,
-  restoreHistory,
   removeHistory,
   clearHistory,
   editTask,
-  editTodo
+  editTodo,
+  getHistory
 } = todosSlice.actions
 export const {getTodos, getTasks, getHistoryTodo} = todosSlice.selectors
 

@@ -23,7 +23,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import CloseIcon from "../../assets/svg/xIcon2.svg?react";
 import ConfirmIcon from "../../assets/svg/confirm.svg?react";
-import { clearCompleted, getTasks, updatedTask } from "@/store/todoSlice";
+import { getTasks, updatedTask } from "@/store/todoSlice";
 import { useEffect, useState } from "react";
 import { AppDispatch, RootState } from "@/store";
 
@@ -33,6 +33,7 @@ import clsx from "clsx";
 import { Input } from "./input";
 import {
   addNewTask,
+  deleteCompletedTasks,
   removeTask,
   removeTodo,
   toggleTaskCompleted,
@@ -57,7 +58,7 @@ const Todo = ({ id, title, tasks }: todo) => {
 
   const { theme } = useTheme();
   const allTasks = useSelector((state: RootState) => getTasks(state, id));
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state?.auth.user);
 
   if (!user) return;
   const userId = user?.id;
@@ -79,7 +80,7 @@ const Todo = ({ id, title, tasks }: todo) => {
   };
 
   const onClearCompleted = () => {
-    dispatch(clearCompleted({ id: id }));
+    dispatch(deleteCompletedTasks({ todoId: id }));
   };
 
   const onTaskEdit = (taskId: string, todo: string) => {
@@ -160,7 +161,7 @@ const Todo = ({ id, title, tasks }: todo) => {
       {...attributes}
       {...listeners}
     >
-      <div className=" rounded-md py-4 dark:bg-[#272A36] bg-[#f5edf0] text-white mb-5">
+      <div className=" rounded-md py-4 dark:bg-[#272A36] bg-[#f5edf0] text-white mb-5 touch-none">
         <div className="flex justify-between items-center  mb-4 px-4">
           <div className="flex items-center gap-4">
             {todoEdit ? (

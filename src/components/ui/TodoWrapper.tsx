@@ -25,14 +25,16 @@ import HistoryModal from "./HistoryModal/HistoryModal";
 import { AppDispatch } from "@/store";
 import { addNewTodo, updateTodosOrder } from "@/services/todoServices";
 import { logout } from "@/store/authSlice";
+import { supabase } from "@/services/supabaseClient";
 
 const TodoWrapper = () => {
   const todos = useSelector(getTodos);
   const history = useSelector(getHistoryTodo);
   const dispatch = useDispatch<AppDispatch>();
-
   const [allTodos, setAllTodos] = useState(todos);
-
+  const logOut = async () => {
+    await supabase.auth.signOut();
+  };
   const [historyOpen, setHistoryOpen] = useState(false);
   const { theme } = useTheme();
   const onTodoAdd = (title: string) => {
@@ -145,7 +147,12 @@ const TodoWrapper = () => {
           historyData={history}
         />
         <div className="flex justify-center items-center">
-          <button onClick={() => dispatch(logout())}>
+          <button
+            onClick={() => {
+              dispatch(logout());
+              logOut();
+            }}
+          >
             <LogOut
               width={25}
               height={25}

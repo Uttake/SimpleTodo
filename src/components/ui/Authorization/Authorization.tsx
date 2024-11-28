@@ -64,6 +64,9 @@ const Authorization = () => {
 
       if (result) {
         localStorage.setItem("user", JSON.stringify(result));
+        if (!localStorage.getItem("history")) {
+          localStorage.setItem("history", JSON.stringify([]));
+        }
         navigate("/todo");
       }
     } catch (error) {
@@ -80,6 +83,9 @@ const Authorization = () => {
       const { id } = result;
       if (result) {
         localStorage.setItem("user", JSON.stringify(result));
+        if (!localStorage.getItem("history")) {
+          localStorage.setItem("history", JSON.stringify([]));
+        }
         navigate("/todo");
         dispatch(fetchTodos(id));
       }
@@ -139,6 +145,7 @@ const Authorization = () => {
                   <FormItem className=" flex flex-col text-black relative">
                     <FormLabel>Пароль</FormLabel>
                     <button
+                      type="button"
                       className="absolute right-0 top-1 h-full px-3 py-2 z-[60]"
                       onClick={(e) => {
                         e.preventDefault();
@@ -189,18 +196,22 @@ const Authorization = () => {
           <div className="flex justify-center gap-6 items-center">
             <Button
               variant="outline"
+              type="button"
               className=" basis-1/3"
-              onClick={() => dispatch(signInOther({ type: "facebook" }))}
+              onClick={(e) => {
+                e.preventDefault();
+                dispatch(signInOther({ type: "github" }));
+              }}
             >
               <GithubIcon fill={theme === "dark" ? "#fff" : "#000"} /> Github
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               className=" basis-1/3"
               onClick={() => dispatch(signInOther({ type: "google" }))}
             >
               <GoogleIcon fill={theme === "dark" ? "#fff" : "#000"} /> Google
-            </Button>
+            </Button> */}
           </div>
           <div className="text-sm text-black mt-4 text-center">
             {!isLogin ? "Нет аккаунта?" : "Уже есть аккаунт?"}

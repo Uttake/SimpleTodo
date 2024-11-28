@@ -4,6 +4,8 @@ export type todo = {
     id: string,
     title: string,
     tasks: task[]
+    user_id?: string
+    position?: number
 }
 
 export type task = {

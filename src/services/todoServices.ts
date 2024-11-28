@@ -1,22 +1,22 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "./supabaseClient";
-import { task } from "@/lib/definitions";
+import { task, todo } from "@/lib/definitions";
 import { AppDispatch, RootState } from "@/store";
 import { v1 } from "uuid";
 import { addTask, deleteTask, deleteTodo, editTask, editTodo, toggleTask } from "@/store/todoSlice";
-import { debounce } from "@/lib/utils";
 
-type asyncTodoState = {
-    id: string;
-    title: string;
-    user_id: string;
-    tasks: task[];
-  }
+
+export type asyncTodoState = {
+  id: string;
+  title: string;
+  user_id?: string;
+  tasks: task[];
+  position: number;
+};
 
 export const fetchTodos = createAsyncThunk('todos/fetchTodos ', async (id : string, {rejectWithValue}) => {
     try {
      const { data, error } = await supabase.from('todos').select('*').eq('user_id', id).order('position', { ascending: true });;
-   
      if (error) {
       throw new Error('Ошибка при получении задач');
      }
@@ -36,6 +36,7 @@ export const addNewTodo = createAsyncThunk<
   'todos/addNewTodo',
   async ({ title }, { getState, rejectWithValue }) => {
     const user = getState().auth.user;
+
     if (!user) {
       return rejectWithValue('Пользователь не авторизован');
     }
@@ -43,19 +44,12 @@ export const addNewTodo = createAsyncThunk<
     try {
       const id = v1();
 
-      const { data: maxPositionData, error: positionError } = await supabase
-        .from('todos')
-        .select('position')
-        .eq('user_id', user.id)
-        .order('position', { ascending: false })
-        .limit(1)
-        .single();
+      const userTodos = getState().todos.todos.filter((todo) => todo.user_id === user.id);
 
-      if (positionError && positionError.code !== 'PGRST116') {
-        throw new Error('Ошибка при определении позиции');
-      }
 
-      const maxPosition = maxPositionData?.position || 0;
+      const maxPosition = userTodos.length > 0 
+        ? Math.max(...userTodos.map((todo) => todo.position || 0)) 
+        : 0;
 
       const newTodo = {
         id,
@@ -186,7 +180,7 @@ export const removeTask = createAsyncThunk<
     try {
         const stateTasks = getState().todos.todos.find((todo) => todo.id === todoId)?.tasks;
 
-        let updatedTasks = stateTasks?.filter((task : any) => task.id !== id);
+        let updatedTasks = stateTasks?.filter((task : task) => task.id !== id);
         let { error: updateError } = await supabase
           .from('todos')
           .update({ tasks: updatedTasks })
@@ -209,7 +203,7 @@ export const toggleTaskCompleted = createAsyncThunk<
   async ({ todoId, id }, { getState, dispatch, rejectWithValue }) => {
     try {
       const stateTasks = getState().todos.todos.find((todo) => todo.id === todoId)?.tasks;
-        let updatedTasks = stateTasks?.map((task : any) => {
+        let updatedTasks = stateTasks?.map((task : task) => {
           if (task.id === id) {
             return { ...task, completed: !task.completed };
           }
@@ -238,7 +232,7 @@ export const updateTaskTitle = createAsyncThunk<
   async ({ todoId, id, newTitle }, {getState, dispatch, rejectWithValue }) => {
     try {
       const stateTasks = getState().todos.todos.find((todo) => todo.id === todoId)?.tasks;
-        let updatedTasks = stateTasks?.map((task : any) => {
+        let updatedTasks = stateTasks?.map((task : task) => {
           if (task.id === id) {
             return { ...task, todo: newTitle };
           }
@@ -289,10 +283,9 @@ export const updateTaskOrder = createAsyncThunk<
   async ({ tasks, todoId }, { getState, rejectWithValue }) => {
 
     try {
-      const stateTasks = getState().todos.todos.find((todo) => todo.id === todoId)?.tasks;
-      const existingTasks: task[] = stateTasks || [];
-
-      const updatedTasks = existingTasks.map((task) => {
+      const stateTasks = getState().todos.todos.find((todo) => todo.id === todoId)?.tasks || [];
+      
+      const updatedTasks = stateTasks?.map((task) => {
         const updatedTask = tasks.find((t) => t.id === task.id);
         return updatedTask ? { ...task, position: updatedTask.position } : task;
       });
@@ -313,3 +306,64 @@ export const updateTaskOrder = createAsyncThunk<
   }
 );
 
+
+
+export const restoreHistoryTodo = createAsyncThunk<
+  asyncTodoState,
+  todo,
+  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+>(
+  'todos/restoreHistoryTodo',
+  async (todo, { getState, rejectWithValue }) => { 
+    const user = getState().auth.user;
+
+    if (!user) {
+      return rejectWithValue('Пользователь не авторизован');
+    }
+
+    try {
+      const userTodos = getState().todos.todos.filter((todo) => todo.user_id === user.id);
+      const maxPosition = userTodos.length > 0 
+        ? Math.max(...userTodos.map((todo) => todo.position || 0)) 
+        : 0;
+      const newTodo = {
+        ...todo,
+        position: maxPosition + 1
+      };
+      
+      const { error } = await supabase.from('todos').insert(newTodo);
+      if (error) {
+        throw new Error('Ошибка при добавлении задачи');
+      }
+      return newTodo;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка при добавлении задачи');
+    }
+  }
+);
+
+
+export const deleteCompletedTasks = createAsyncThunk<
+  {id: string},
+  { todoId: string}, 
+  {state: RootState;  dispatch: AppDispatch; rejectValue: string }
+>(
+  'todos/deleteCompletedTasks',
+  async ({ todoId}, { getState, rejectWithValue }) => {
+    try {
+      const stateTasks = getState().todos.todos.find((todo) => todo.id === todoId)?.tasks;
+        let updatedTasks = stateTasks?.filter((el: task) => !el.completed)
+         
+        let { error: updateError } = await supabase
+          .from('todos')
+          .update({ tasks: updatedTasks })
+          .eq('id', todoId);
+      
+        if (updateError) throw new Error(updateError.message);
+
+      return {id: todoId};
+   
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Неизвестная ошибка');
+    }
+});

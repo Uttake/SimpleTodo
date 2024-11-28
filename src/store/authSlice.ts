@@ -10,7 +10,8 @@ interface RegisterUserParams {
 
 export interface User {
   id: string;
-  username: string;
+  email?: string;
+  username?: string;
 }
 
 interface AuthState {
@@ -26,7 +27,7 @@ const initialState: AuthState = {
 };
 
 
-interface OAuthResponse {
+export interface OAuthResponse {
   user: {
     id: string;
     email: string;
@@ -38,7 +39,7 @@ interface OAuthResponse {
 }
 
 
-type OAuthProvider = 'google' | 'github' | 'facebook';  
+export type OAuthProvider = 'google' | 'github' | 'facebook' ;  
 
 export const signInOther = createAsyncThunk<
   OAuthResponse,               
@@ -47,9 +48,12 @@ export const signInOther = createAsyncThunk<
 >('auth/signInOther', async ({ type }, { rejectWithValue }) => {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: type
+      provider: type,
+      options: {
+        redirectTo: 'http://localhost:5173/todo',
+      }
     });
-
+  
     if (error) {
       return rejectWithValue(error.message);  
     }
@@ -143,6 +147,16 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = typeof action.payload === 'string' ? action.payload : 'Ошибка входа';
+      })
+      .addCase(signInOther.fulfilled, (state, action) => {
+        state.user = {
+          id: action.payload.user.id,
+          email: action.payload.user.email,
+        };
+        state.error = null;
+      })
+      .addCase(signInOther.rejected, (state, action) => {
+        state.error = action.payload || 'Неизвестная ошибка';
       });
   },
 });

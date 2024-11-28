@@ -5,10 +5,12 @@ import { todo } from "@/lib/definitions";
 import { Button } from "../button";
 import CloseIcon from "../../../assets/svg/xIcon2.svg?react";
 import { useDispatch } from "react-redux";
-import { clearHistory, removeHistory, restoreHistory } from "@/store/todoSlice";
+import { clearHistory, removeHistory } from "@/store/todoSlice";
 import { useEffect, useState } from "react";
 import { CSSTransition } from "react-transition-group";
 import { useTheme } from "@/Context/ContextTheme";
+import { restoreHistoryTodo } from "@/services/todoServices";
+import { AppDispatch } from "@/store";
 type HistoryModalTypes = {
   isOpen: boolean;
   width: number;
@@ -27,7 +29,7 @@ const HistoryModal = ({
     setIsOpen(false);
   };
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [tasksOpen, setTasksOpen] = useState("");
   const { theme } = useTheme();
   useEffect(() => {
@@ -57,7 +59,10 @@ const HistoryModal = ({
         </h2>
         <div className=" max-h-[550px] overflow-y-auto pb-5 pr-5 pl-5">
           <button onClick={handleOverlay}>
-            <CloseIcon fill="#000" className="absolute top-4 right-4" />
+            <CloseIcon
+              fill={theme === "dark" ? "#fff" : "#000"}
+              className="absolute top-4 right-4"
+            />
           </button>
           {historyData?.map((todo) => (
             <div
@@ -103,7 +108,7 @@ const HistoryModal = ({
                     <Button
                       className="text-xs p-2"
                       variant={"default"}
-                      onClick={() => dispatch(restoreHistory({ id: todo.id }))}
+                      onClick={() => dispatch(restoreHistoryTodo(todo))}
                     >
                       Восстановить
                     </Button>

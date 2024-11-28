@@ -38,7 +38,7 @@ const Task = ({
   return (
     <div
       key={id}
-      className="flex items-center justify-between mb-4 p-2 border-b-[1px] border-slate-400 px-4 gap-3 last:mb-0 overflow-hidden"
+      className="flex items-center justify-between mb-4 p-2 border-b-[1px] border-slate-400 px-4 gap-3 last:mb-0 overflow-hidden touch-none"
       ref={setNodeRef}
       style={style}
       {...attributes}
