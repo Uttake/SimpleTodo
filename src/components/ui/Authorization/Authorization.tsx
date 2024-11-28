@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "../input";
 import { Button } from "../button";
-import GoogleIcon from "../../../assets/svg/google.svg?react";
 import GithubIcon from "../../../assets/svg/github.svg?react";
 import { useTheme } from "@/Context/ContextTheme";
 import { useState } from "react";
