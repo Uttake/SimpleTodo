@@ -51,7 +51,6 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
           dispatch(setUser(user));
           dispatch(fetchTodos(user.id));
           dispatch(getHistory());
-          console.log("User authenticated via localStorage:", user);
         } else {
           localStorage.removeItem("user");
           console.warn("Local user invalid, redirecting to login");
