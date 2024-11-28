@@ -1,12 +1,6 @@
-import  bcrypt  from 'bcryptjs';
-import { supabase } from '@/services/supabaseClient';
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
-
-interface RegisterUserParams {
-  username: string;
-  password: string;
-}
+import { loginUser, registerUser, signInOther } from '@/services/authService';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface User {
   id: string;
@@ -39,72 +33,6 @@ export interface OAuthResponse {
 }
 
 
-export type OAuthProvider = 'google' | 'github' | 'facebook' ;  
-
-export const signInOther = createAsyncThunk<
-  OAuthResponse,               
-  { type: OAuthProvider },     
-  { rejectValue: string }      
->('auth/signInOther', async ({ type }, { rejectWithValue }) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: type,
-      options: {
-        redirectTo: 'http://localhost:5173/todo',
-      }
-    });
-  
-    if (error) {
-      return rejectWithValue(error.message);  
-    }
-
-    return data as any;  
-  } catch (error) {
-    return rejectWithValue('Неизвестная ошибка');
-  }
-});
-
-
-export const registerUser = createAsyncThunk<
-  User,
-  RegisterUserParams,
-  { rejectValue: string }
->('auth/register', async ({ username, password }, { rejectWithValue }) => {
-  const { data, error } = await supabase
-    .from('users')
-    .insert({ username, password_hash: password })
-    .select()
-    .single();
-
-  if (error) {
-    return rejectWithValue(error.message);
-  }
-
-  return data as User;
-});
-
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async (
-    { username, password }: { username: string; password: string },
-    {rejectWithValue }
-  ) => {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, username, password_hash')
-      .eq('username', username)
-      .single();
-    if (error || !user) {
-      return rejectWithValue('Неверный логин или пароль');
-    }
-    const isPasswordValid = bcrypt.compareSync(password, user.password_hash);
-    if (!isPasswordValid) {
-      return rejectWithValue('Неверный логин или пароль');
-    }
-    const { password_hash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
-  }
-);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -160,6 +88,8 @@ const authSlice = createSlice({
       });
   },
 });
+
+
 export const {getUser, getAutError} = authSlice.selectors
 export const { setUser, logout } = authSlice.actions;
 export default authSlice.reducer;

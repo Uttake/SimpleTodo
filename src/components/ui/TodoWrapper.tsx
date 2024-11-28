@@ -32,11 +32,13 @@ const TodoWrapper = () => {
   const history = useSelector(getHistoryTodo);
   const dispatch = useDispatch<AppDispatch>();
   const [allTodos, setAllTodos] = useState(todos);
+
   const logOut = async () => {
     await supabase.auth.signOut();
   };
   const [historyOpen, setHistoryOpen] = useState(false);
   const { theme } = useTheme();
+
   const onTodoAdd = (title: string) => {
     dispatch(addNewTodo({ title }));
   };

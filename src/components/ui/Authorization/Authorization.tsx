@@ -17,17 +17,13 @@ import { useTheme } from "@/Context/ContextTheme";
 import { useState } from "react";
 
 import bcrypt from "bcryptjs";
-import {
-  getAutError,
-  loginUser,
-  registerUser,
-  signInOther,
-} from "@/store/authSlice";
+import { getAutError } from "@/store/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { AppDispatch } from "@/store";
 import { fetchTodos } from "@/services/todoServices";
+import { loginUser, registerUser, signInOther } from "@/services/authService";
 
 const Authorization = () => {
   const { theme } = useTheme();

@@ -74,7 +74,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   }, [dispatch]);
 
   if (loading) {
-    return null;
+    return <h1>Добро пожаловать</h1>;
   }
 
   if (!user) {
