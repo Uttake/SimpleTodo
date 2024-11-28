@@ -8,7 +8,11 @@ import { checkUser } from "@/services/authService";
 import { getHistory } from "@/store/todoSlice";
 import { supabase } from "@/services/supabaseClient";
 
-const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
+interface PrivateRouteProps {
+  children: JSX.Element;
+}
+
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const user = useSelector(getUser);
   const dispatch = useDispatch<AppDispatch>();
   const [loading, setLoading] = useState(true);
@@ -16,32 +20,49 @@ const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   const validateUser = async () => {
     try {
       const { data, error } = await supabase.auth.getSession();
+
       if (error) {
         console.error("Error getting session:", error);
       }
 
       if (data?.session?.user) {
         const { id, email } = data.session.user;
+        const { error: dbError } = await supabase.from("users").upsert({
+          id,
+          username: email,
+          password_hash: "OAuth user",
+          created_at: new Date(),
+        });
+
+        if (dbError) {
+          console.error("Error creating/updating user:", dbError);
+        }
         dispatch(setUser({ id, username: email }));
         dispatch(fetchTodos(id));
         dispatch(getHistory());
-        console.log("Authenticated via Supabase:", id, email);
-      } else {
-        const userData = localStorage.getItem("user");
-        if (userData) {
-          const user = JSON.parse(userData);
-          const valid = await checkUser(user.id);
-          if (valid) {
-            dispatch(setUser(user));
-            dispatch(fetchTodos(user.id));
-            dispatch(getHistory());
-          } else {
-            localStorage.removeItem("user");
-          }
+        return;
+      }
+
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        const valid = await checkUser(user.id);
+        if (valid) {
+          dispatch(setUser(user));
+          dispatch(fetchTodos(user.id));
+          dispatch(getHistory());
+          console.log("User authenticated via localStorage:", user);
+        } else {
+          localStorage.removeItem("user");
+          console.warn("Local user invalid, redirecting to login");
+          <Navigate to="/" />;
         }
+      } else {
+        console.warn("No session or user found");
+        <Navigate to="/" />;
       }
     } catch (error) {
-      console.error("Validation error:", error);
+      console.error("Error validating user:", error);
     } finally {
       setLoading(false);
     }
@@ -52,7 +73,12 @@ const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
     if (hash) {
       const params = new URLSearchParams(hash.substring(1));
       const accessToken = params.get("access_token");
-      if (accessToken) {
+      const refreshToken = params.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
         window.location.hash = "";
       }
     }
@@ -60,7 +86,7 @@ const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   }, [dispatch]);
 
   if (loading) {
-    return <h1>Добро пожаловать</h1>;
+    return null;
   }
 
   if (!user) {

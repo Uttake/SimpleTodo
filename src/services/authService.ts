@@ -41,7 +41,7 @@ export const signInOther = createAsyncThunk<
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: type,
       options: {
-        redirectTo: 'https://simplestodos.netlify.app/todo',
+        redirectTo: 'http://localhost:5173/todo',
       }
     });
   
