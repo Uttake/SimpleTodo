@@ -159,9 +159,11 @@ const Todo = ({ id, title, tasks }: todo) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
     >
-      <div className=" rounded-md py-4 dark:bg-[#272A36] bg-[#f5edf0] text-white mb-5 touch-none">
+      <div
+        className=" rounded-md py-4 dark:bg-[#272A36] bg-[#f5edf0] text-white mb-5 touch-none"
+        {...listeners}
+      >
         <div className="flex justify-between items-center  mb-4 px-4">
           <div className="flex items-center gap-4">
             {todoEdit ? (
@@ -242,7 +244,7 @@ const Todo = ({ id, title, tasks }: todo) => {
             items={fillteredTasks.map((item: task) => item.id)}
             strategy={verticalListSortingStrategy}
           >
-            <TransitionGroup className=" mt-4 max-h-60 h-[calc(100%-100px)] overflow-auto relative">
+            <TransitionGroup className="mt-4 max-h-60 h-[calc(100%-100px)] overflow-y-auto relative">
               {fillteredTasks.map((el: task) => (
                 <CSSTransition
                   key={el.id}

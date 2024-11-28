@@ -28,14 +28,13 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --darkBg: #272A36;
+    --darkBg: #272a36;
     --lightBg: #f5edf0;
   }
 
   .light {
     --background: f5edf0;
   }
-
 
   .dark {
     --background: 0 0% 3.9%;
@@ -62,7 +61,6 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-
   }
 }
 
@@ -82,7 +80,6 @@ body[data-theme="dark"]::after {
   background-color: #dcbddf;
 }
 
-
 body[data-theme="light"] {
   background-color: #dcbddf;
   transition: all 0.3s ease-in-out;
@@ -100,7 +97,6 @@ body[data-theme="light"]::after {
   transition: all 0.3s ease-in-out;
 }
 
-
 @layer base {
   * {
     @apply border-border;
@@ -113,6 +109,10 @@ body[data-theme="light"]::after {
 *::-webkit-scrollbar {
   height: 8px;
   width: 4px;
+}
+
+.body {
+  -webkit-overflow-scrolling: touch;
 }
 
 *::-webkit-scrollbar-thumb {
@@ -175,9 +175,6 @@ body[data-theme="light"]::after {
   transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
 }
 
-
-
-
 .todo-enter {
   opacity: 0;
   transform: scale(0.9) translateY(-10px);
@@ -194,15 +191,14 @@ body[data-theme="light"]::after {
   transform: scale(1) translateY(0);
 }
 
-
 .todo-exit {
-  position: absolute; 
+  position: absolute;
   opacity: 1;
   transform: translateY(0);
 }
 
 .todo-exit-active {
   opacity: 0;
-  transform: scale(0.9) translateY(10px); 
+  transform: scale(0.9) translateY(10px);
   transition: opacity 300ms ease, transform 300ms ease;
 }
